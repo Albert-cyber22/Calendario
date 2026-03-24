@@ -1,0 +1,466 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda Personal</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family: "Segoe UI", sans-serif;
+}
+
+/* FONDO FEMENINO */
+
+body{
+background:linear-gradient(135deg,#ffd6e7,#ffeaf4);
+min-height:100vh;
+}
+
+/* CONTENEDOR */
+
+.container{
+display:flex;
+flex-wrap:wrap;
+}
+
+/* PANEL IZQUIERDO */
+
+.sidebar{
+width:330px;
+background:white;
+padding:20px;
+box-shadow:0 10px 25px rgba(255,105,180,0.25);
+border-radius:15px;
+margin:15px;
+}
+
+/* TITULOS */
+
+h3{
+margin-top:15px;
+color:#ff4fa3;
+}
+
+/* INPUTS */
+
+input, textarea{
+width:100%;
+padding:10px;
+border-radius:10px;
+border:1px solid #ffc4de;
+margin-top:5px;
+}
+
+textarea{
+resize:none;
+}
+
+/* BOTONES ROSADOS */
+
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:20px;
+margin-top:10px;
+cursor:pointer;
+font-weight:bold;
+
+background:linear-gradient(45deg,#ff4fa3,#ff8ac9);
+color:white;
+
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+box-shadow:0 6px 20px rgba(255,105,180,0.4);
+}
+
+/* AREA PRINCIPAL */
+
+.main{
+flex:1;
+padding:20px;
+}
+
+/* BIENVENIDA */
+
+.welcome{
+font-size:26px;
+font-weight:bold;
+color:#ff4fa3;
+margin-bottom:15px;
+}
+
+/* CABECERA CALENDARIO */
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+flex-wrap:wrap;
+}
+
+.month{
+font-size:24px;
+font-weight:bold;
+color:#ff4fa3;
+}
+
+/* BUSCADOR */
+
+.search{
+padding:8px;
+border-radius:10px;
+border:1px solid pink;
+}
+
+/* CALENDARIO */
+
+.calendar{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:10px;
+}
+
+/* DIA */
+
+.day{
+background:white;
+border-radius:15px;
+padding:12px;
+min-height:70px;
+cursor:pointer;
+transition:0.25s;
+position:relative;
+box-shadow:0 4px 10px rgba(255,105,180,0.2);
+}
+
+.day:hover{
+transform:translateY(-4px);
+box-shadow:0 10px 20px rgba(255,105,180,0.35);
+}
+
+.day-number{
+font-weight:bold;
+color:#ff4fa3;
+}
+
+/* INDICADORES */
+
+.task-dot{
+width:8px;
+height:8px;
+background:#ff4fa3;
+border-radius:50%;
+position:absolute;
+bottom:8px;
+right:8px;
+}
+
+.diary-dot{
+width:8px;
+height:8px;
+background:#ff9ed1;
+border-radius:50%;
+position:absolute;
+bottom:8px;
+left:8px;
+}
+
+/* LISTA TAREAS */
+
+.task-item{
+background:#ffe6f2;
+padding:6px;
+border-radius:10px;
+margin-top:5px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+font-size:13px;
+}
+
+/* BOTON ELIMINAR */
+
+.delete{
+background:#ff4fa3;
+border:none;
+color:white;
+border-radius:8px;
+padding:3px 7px;
+cursor:pointer;
+}
+
+/* RESPONSIVE */
+
+@media (max-width:900px){
+
+.container{
+flex-direction:column;
+}
+
+.sidebar{
+width:auto;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+
+<h3>👩 Tu nombre</h3>
+
+<input id="nameInput" placeholder="Escribe tu nombre">
+
+<button onclick="guardarNombre()">Guardar nombre</button>
+
+<h3>📅 Día seleccionado</h3>
+<p id="selectedDate">Selecciona un día</p>
+
+<h3>💗 Tareas</h3>
+
+<textarea id="taskInput" placeholder="Escribe una tarea"></textarea>
+<button onclick="guardarTarea()">Agregar tarea</button>
+
+<div id="taskList"></div>
+
+<h3>📓 Diario</h3>
+
+<textarea id="diaryInput" style="height:140px" placeholder="Escribe tu diario"></textarea>
+
+</div>
+
+<div class="main">
+
+<div class="welcome" id="welcomeText">
+Bienvenida
+</div>
+
+<div class="header">
+
+<div>
+<button onclick="cambiarMes(-1)">◀</button>
+<span class="month" id="month"></span>
+<button onclick="cambiarMes(1)">▶</button>
+</div>
+
+<input class="search" placeholder="Buscar tarea" oninput="buscar(this.value)">
+
+</div>
+
+<div class="calendar" id="calendar"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const calendar=document.getElementById("calendar")
+const monthLabel=document.getElementById("month")
+const selectedDate=document.getElementById("selectedDate")
+const taskInput=document.getElementById("taskInput")
+const diaryInput=document.getElementById("diaryInput")
+const taskList=document.getElementById("taskList")
+const welcomeText=document.getElementById("welcomeText")
+const nameInput=document.getElementById("nameInput")
+
+let fecha=new Date()
+let diaSeleccionado=null
+
+/* NOMBRE */
+
+function guardarNombre(){
+
+let nombre=nameInput.value
+
+localStorage.setItem("usuarioNombre",nombre)
+
+mostrarNombre()
+
+}
+
+function mostrarNombre(){
+
+let nombre=localStorage.getItem("usuarioNombre")
+
+if(nombre){
+welcomeText.innerText="Bienvenida, "+nombre+" 💗"
+nameInput.value=nombre
+}
+
+}
+
+mostrarNombre()
+
+/* CALENDARIO */
+
+function generarCalendario(){
+
+calendar.innerHTML=""
+
+let year=fecha.getFullYear()
+let month=fecha.getMonth()
+
+let firstDay=new Date(year,month,1).getDay()
+let days=new Date(year,month+1,0).getDate()
+
+monthLabel.innerText=
+fecha.toLocaleString('es',{month:'long'})+" "+year
+
+for(let i=0;i<firstDay;i++){
+calendar.innerHTML+="<div></div>"
+}
+
+for(let d=1;d<=days;d++){
+
+let div=document.createElement("div")
+div.className="day"
+
+let key=`${year}-${month}-${d}`
+
+let tareas=JSON.parse(localStorage.getItem("task-"+key)||"[]")
+let diario=localStorage.getItem("diary-"+key)
+
+div.innerHTML=`<div class="day-number">${d}</div>`
+
+if(tareas.length>0){
+let dot=document.createElement("div")
+dot.className="task-dot"
+div.appendChild(dot)
+}
+
+if(diario){
+let dot=document.createElement("div")
+dot.className="diary-dot"
+div.appendChild(dot)
+}
+
+div.onclick=()=>seleccionarDia(d)
+
+calendar.appendChild(div)
+
+}
+
+}
+
+function seleccionarDia(d){
+
+diaSeleccionado=new Date(fecha.getFullYear(),fecha.getMonth(),d)
+
+let key=`${diaSeleccionado.getFullYear()}-${diaSeleccionado.getMonth()}-${diaSeleccionado.getDate()}`
+
+selectedDate.innerText=diaSeleccionado.toDateString()
+
+let tareas=JSON.parse(localStorage.getItem("task-"+key)||"[]")
+
+taskList.innerHTML=""
+
+tareas.forEach((t,i)=>{
+
+let div=document.createElement("div")
+div.className="task-item"
+
+div.innerHTML=`${t} <button class="delete" onclick="eliminarTarea(${i})">X</button>`
+
+taskList.appendChild(div)
+
+})
+
+diaryInput.value=localStorage.getItem("diary-"+key)||""
+
+}
+
+diaryInput.addEventListener("input",()=>{
+
+if(!diaSeleccionado) return
+
+let key=`${diaSeleccionado.getFullYear()}-${diaSeleccionado.getMonth()}-${diaSeleccionado.getDate()}`
+
+localStorage.setItem("diary-"+key,diaryInput.value)
+
+generarCalendario()
+
+})
+
+function guardarTarea(){
+
+if(!diaSeleccionado){
+alert("Selecciona un día")
+return
+}
+
+let key=`${diaSeleccionado.getFullYear()}-${diaSeleccionado.getMonth()}-${diaSeleccionado.getDate()}`
+
+let tareas=JSON.parse(localStorage.getItem("task-"+key)||"[]")
+
+tareas.push(taskInput.value)
+
+localStorage.setItem("task-"+key,JSON.stringify(tareas))
+
+taskInput.value=""
+
+seleccionarDia(diaSeleccionado.getDate())
+
+generarCalendario()
+
+}
+
+function eliminarTarea(index){
+
+let key=`${diaSeleccionado.getFullYear()}-${diaSeleccionado.getMonth()}-${diaSeleccionado.getDate()}`
+
+let tareas=JSON.parse(localStorage.getItem("task-"+key)||"[]")
+
+tareas.splice(index,1)
+
+localStorage.setItem("task-"+key,JSON.stringify(tareas))
+
+seleccionarDia(diaSeleccionado.getDate())
+
+generarCalendario()
+
+}
+
+function cambiarMes(n){
+
+fecha.setMonth(fecha.getMonth()+n)
+
+generarCalendario()
+
+}
+
+function buscar(texto){
+
+texto=texto.toLowerCase()
+
+document.querySelectorAll(".task-item").forEach(t=>{
+
+t.style.display=t.innerText.toLowerCase().includes(texto)?"flex":"none"
+
+})
+
+}
+
+generarCalendario()
+
+</script>
+
+</body>
+</html>
+```

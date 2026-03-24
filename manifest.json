@@ -1,0 +1,15 @@
+{
+"name": "Agenda Rosa",
+"short_name": "Agenda",
+"start_url": "index.html",
+"display": "standalone",
+"background_color": "#ffd6e7",
+"theme_color": "#ff4fa3",
+"icons": [
+{
+"src": "icon.png",
+"sizes": "512x512",
+"type": "image/png"
+}
+]
+}
